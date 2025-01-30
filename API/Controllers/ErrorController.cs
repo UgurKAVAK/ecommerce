@@ -32,7 +32,7 @@ namespace API.Controllers
         [HttpGet("server-error")]
         public IActionResult ServerError()
         {
-            throw new Exception("Server Error");
+            throw new Exception("Server Error"); // 500
         }
     }
 }
