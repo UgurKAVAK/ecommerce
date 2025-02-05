@@ -51,7 +51,7 @@ namespace API.Controllers
             var result = await _context.SaveChangesAsync() > 0;
             if (result)
             {
-                return Ok();
+                return CreatedAtAction(nameof(GetCard), CardToDto(card));
             }
             return BadRequest(new ProblemDetails { Title = "Problem Removing Item From The Card" });
         }
