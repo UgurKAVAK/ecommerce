@@ -25,7 +25,7 @@ namespace API.Controllers
             var user = await _userManager.FindByNameAsync(loginDto.UserName);
             if (user == null)
             {
-                return BadRequest(new {message= $"{loginDto.UserName} Kullanıcı Adına Ait Kullanıcı Bulunamamıştır."});
+                return BadRequest(new ProblemDetails { Title= $"{loginDto.UserName} Kullanıcı Adına Ait Kullanıcı Bulunamamıştır." });
             }
             var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
             if (result)
