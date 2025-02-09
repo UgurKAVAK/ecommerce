@@ -32,6 +32,18 @@
                 CardItems.Remove(item);
             }
         }
+
+        public double CalculateTotal()
+        {
+            return (double)CardItems.Sum(x => x.Product.Price * x.Quantity);
+        }
+        public double CalculateVATTotal()
+        {
+            var subTotal = (double)CardItems.Sum(x => x.Product.Price * x.Quantity);
+            var tax = subTotal * 0.2;
+            var total = subTotal + tax;
+            return total;
+        }
     }
 
     public class CardItem()

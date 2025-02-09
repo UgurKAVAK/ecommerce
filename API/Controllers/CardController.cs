@@ -21,7 +21,7 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<CardDto>> GetCard()
         {
-            var card = await GetOrCreate();
+            var card = await GetOrCreate(GetCustomerId());
             return CardToDto(card);
             //return CardToDto(await GetOrCreate());
         }
@@ -29,7 +29,7 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult> AddItemToCard(int productId, int quantity)
         {
-            var card = await GetOrCreate();
+            var card = await GetOrCreate(GetCustomerId());
             var product = await _context.Products.FirstOrDefaultAsync(i => i.Id == productId);
             if (product == null)
             {
@@ -47,7 +47,7 @@ namespace API.Controllers
         [HttpDelete]
         public async Task<ActionResult> DeleteItemFromItem(int productId, int quantity)
         {
-            var card = await GetOrCreate();
+            var card = await GetOrCreate(GetCustomerId());
             card.DeleteItem(productId, quantity);
             var result = await _context.SaveChangesAsync() > 0;
             if (result)
@@ -57,18 +57,28 @@ namespace API.Controllers
             return BadRequest(new ProblemDetails { Title = "Problem Removing Item From The Card" });
         }
 
-        private async Task<Card> GetOrCreate()
+        private string GetCustomerId()
         {
-            var card = await _context.Cards.Include(i => i.CardItems).ThenInclude(i => i.Product).Where(i => i.CustomerId == Request.Cookies["customerId"]).FirstOrDefaultAsync();
+            return User.Identity?.Name ?? Request.Cookies["customerId"]!;
+        }
+
+        private async Task<Card> GetOrCreate(string custId)
+        {
+            var card = await _context.Cards.Include(i => i.CardItems).ThenInclude(i => i.Product).Where(i => i.CustomerId == custId).FirstOrDefaultAsync();
             if (card == null)
             {
-                var customerId = Guid.NewGuid().ToString();
-                var cookieOptions = new CookieOptions
+                var customerId = User.Identity?.Name;
+                if (string.IsNullOrEmpty(customerId))
                 {
-                    Expires = DateTime.Now.AddMonths(1),
-                    IsEssential = true
-                };
-                Response.Cookies.Append("customerId", customerId, cookieOptions);
+                    customerId = Guid.NewGuid().ToString();
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTime.Now.AddMonths(1),
+                        IsEssential = true
+                    };
+                    Response.Cookies.Append("customerId", customerId, cookieOptions);
+                }
+
                 card = new Card { CustomerId = customerId };
                 _context.Cards.Add(card);
                 await _context.SaveChangesAsync();
